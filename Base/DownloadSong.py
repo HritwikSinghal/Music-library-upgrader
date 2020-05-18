@@ -149,8 +149,9 @@ def getSong(song_info_list, song_name, tags):
     return song_info_list[song_number - 1]
 
 
-def start(song_name, log_file, test=0):
+def start(song_name, song_with_path, log_file, test=0):
     baseUrl = "https://www.jiosaavn.com/search/"
+    tags = easyid3(song_with_path)
 
     url = getURL(baseUrl, song_name, tags)
     printText(url, test=test)

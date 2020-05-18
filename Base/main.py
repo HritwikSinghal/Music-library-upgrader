@@ -4,7 +4,7 @@ import re
 from os.path import isdir
 from os.path import isfile
 
-from Base import DownloadSong
+from Base import DownloadSong, saavnAPI
 from Base import tools
 
 
@@ -48,10 +48,12 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
         song_name = song_name.strip()
         print("Song Name: ", song_name)
 
-        try:
-            DownloadSong.start(song_name, log_file, test=test)
-        except:
-            tools.writeAndPrintLog(log_file, "", test=test)
+        print(saavnAPI.start(url=r'https://www.jiosaavn.com/search/bhula%20dunga', log_file=log_file))
+
+        # try:
+        #     DownloadSong.start(song_name, song_with_path, log_file, test=test)
+        # except:
+        #     tools.writeAndPrintLog(log_file, "\nError Downloading song={0}\n".format(song_name), test=test)
 
 
 def start(test=0):
