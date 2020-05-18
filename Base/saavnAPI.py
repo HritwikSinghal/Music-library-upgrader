@@ -163,6 +163,7 @@ def start(url, log_file, test=0):
                 if actual_album != '':
                     json_data['actual_album'] = actual_album
 
+            fix(json_data)
             x = json.dumps(json_data, indent=2)
             #######################
             # print(x)
@@ -176,3 +177,21 @@ def start(url, log_file, test=0):
         print("invalid url...")
         tools.writeAndPrintLog(log_file, '\nSaavnAPI error, url={}\n'.format(url), test=test)
         return []
+
+
+def fix(json_data):
+    json_data['album'] = tools.removeGibberish(json_data['album']).strip()
+
+    oldArtist = json_data['singers']
+    newArtist = tools.removeGibberish(oldArtist)
+    newArtist = tools.divideBySColon(newArtist)
+    newArtist = tools.removeTrailingExtras(newArtist)
+    json_data['singers'] = tools.removeDup(newArtist)
+
+    old_composer = json_data['music']
+    new_composer = tools.removeGibberish(old_composer)
+    new_composer = tools.divideBySColon(new_composer)
+    new_composer = tools.removeTrailingExtras(new_composer)
+    json_data['music'] = tools.removeDup(new_composer)
+
+    json_data['title'] = tools.removeGibberish(json_data['title'])

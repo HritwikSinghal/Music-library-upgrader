@@ -88,12 +88,12 @@ def removeBitrate(oldName):
 
 
 def removeYear(oldName):
-    newName = re.sub(r' \(\d*\)', '', oldName)
+    newName = re.sub(r'\s*\(\d*\)', '', oldName)
     return newName.strip()
 
 
 def removeGibberish(oldName):
-    newName = re.sub(r'&quot;|&*amp', '', oldName)
+    newName = re.sub(r'&quot;|&*amp| - Single', '', oldName)
     return newName.strip()
 
 

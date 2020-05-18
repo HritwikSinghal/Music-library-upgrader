@@ -112,10 +112,103 @@ def getCertainKeys(song_info):
     return rinfo
 
 
-def getSong(song_info_list, song_name, tags):
-    return song_info_list[0]
+def autoMatch(song_info_list, song_name, tags):
+    for song in song_info_list:
+        json_data = json.loads(song)
 
-    # todo: implement it after fixing it in other project
+        #################################################
+        # print(json.dumps(json_data, indent=4))
+        # print()
+        # print(json_data['title'].lower().strip())
+        # print(song_name.lower().strip())
+        #################################################
+
+        song_name = song_name.lower().strip()
+        title = json_data['title'].lower().strip()
+
+        ed1 = tools.editDistDP(song_name, title, len(song_name), len(title))
+        # print(ed1)
+        if ed1 > 5:
+            continue
+
+        if tools.isTagPresent(tags, 'album'):
+
+            album_from_tags = tools.removeYear(tags['album'][0]).lower().strip()
+            # try:
+            #     album_from_json = json_data['actual_album'].lower().strip()
+            # except KeyError:
+            album_from_json = json_data['album'].lower().strip()
+
+            # print(album_from_json)
+            # print(album_from_tags)
+
+            ed2 = tools.editDistDP(album_from_tags, album_from_json, len(album_from_tags), len(album_from_json))
+            # print(ed2)
+
+            if ed2 >= 4:
+                continue
+
+        if tools.isTagPresent(tags, 'artist'):
+            artist_from_json = json_data['singers']
+            artist_from_json = tools.divideBySColon(artist_from_json)
+            artist_from_json = tools.removeTrailingExtras(artist_from_json)
+            artist_from_json = tools.removeDup(artist_from_json)
+
+            artist_from_tags = tags['artist'][0]
+            artist_from_tags = tools.divideBySColon(artist_from_tags)
+            artist_from_tags = tools.removeTrailingExtras(artist_from_tags)
+            artist_from_tags = tools.removeDup(artist_from_tags)
+
+            # print(artist_from_json)
+            # print(artist_from_tags)
+
+            ed3 = tools.editDistDP(artist_from_tags, artist_from_json, len(artist_from_tags), len(artist_from_json))
+            # print(ed3)
+
+            if ed3 >= 11:
+                continue
+
+        return song
+
+    return None
+
+
+def getSong(song_info_list, song_name, tags):
+    # auto-match song
+    song = autoMatch(song_info_list, song_name, tags)
+    if song is not None:
+        return song
+
+    # if no song was matched, Ask user
+    print("\n-------------------------------"
+          "--------------------------------\n")
+
+    # printing the song list
+    i = 0
+    for song in song_info_list:
+        rel_keys = getCertainKeys(song)
+        print(i + 1, end=' ) \n')
+        for key in rel_keys:
+            if key != 'actual_album':
+                print('\t', key, ':', rel_keys[key])
+        print()
+        i += 1
+
+    # now asking user
+    song_number = input("\nEnter your song number from above list, if none matches, enter 'n': ")
+
+    try:
+        if int(song_number) > len(song_info_list):
+            song_number = int(input("\nOops..You mistyped, \n"
+                                    "Please enter number within above range. If none matches, enter 'n': ")) - 1
+
+            if song_number > len(song_info_list):
+                return -1
+    except ValueError:
+        return -1
+
+    song_number = int(song_number)
+    return song_info_list[song_number - 1]
 
 
 def getSongInfo(song_name, song_with_path, log_file, test=0):
