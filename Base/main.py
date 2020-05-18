@@ -53,6 +53,7 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
         song_with_path = os.path.join(song_dir, song)
 
         song_name = tools.removeBitrate(song)
+        song_name = tools.removeGibberish(song_name)
         song_name = song_name.replace('.mp3', '')
         song_name = song_name.strip()
         print("Song Name: ", song_name)

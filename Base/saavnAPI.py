@@ -93,9 +93,6 @@ def start(url, log_file, test=0):
 
     proxies = fate_proxy()
 
-    if test:
-        print("Text Query Detected, Now in SaavnAPI.start()")
-
     try:
         res = requests.get(url, headers=user_agent, data=[('bitrate', '320')])
 
@@ -112,9 +109,6 @@ def start(url, log_file, test=0):
                 # print("IN TRY")
                 #######################
 
-                # x = json.dumps(json_data, indent=2)
-                # song_list.append(x)
-
             except:
                 # the error is caused by quotation marks in songs title as shown below
                 # (foo bar "XXX")
@@ -123,6 +117,7 @@ def start(url, log_file, test=0):
                 #######################
                 # print("IN EXCEPT")
                 # print(info.text)
+                # x = input()
                 #######################
 
                 try:
@@ -170,7 +165,6 @@ def start(url, log_file, test=0):
 
             x = json.dumps(json_data, indent=2)
             #######################
-            # print(actual_album)
             # print(x)
             # a = input()
             #######################
@@ -179,8 +173,6 @@ def start(url, log_file, test=0):
 
         return song_list
     except Exception:
-        song_list = []
-
         print("invalid url...")
         tools.writeAndPrintLog(log_file, '\nSaavnAPI error, url={}\n'.format(url), test=test)
-        return song_list
+        return []

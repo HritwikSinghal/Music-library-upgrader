@@ -89,15 +89,15 @@ def getCertainKeys(song_info):
 
         if key in rel_keys:
             if key == 'singers':
-                rinfo['artist'] = json_data[key]
+                rinfo['artist'] = json_data[key].strip()
             elif key == 'music':
-                rinfo['composer'] = json_data[key]
+                rinfo['composer'] = json_data[key].strip()
             elif key == 'year':
-                rinfo['date'] = json_data[key]
+                rinfo['date'] = json_data[key].strip()
             elif key == 'duration':
-                rinfo['length'] = json_data[key]
+                rinfo['length'] = json_data[key].strip()
             elif key == 'label':
-                rinfo['organization'] = json_data[key]
+                rinfo['organization'] = json_data[key].strip()
             elif key == 'image_url':
                 rinfo['image_url'] = tools.fixImageUrl(json_data[key])
             elif key == 'url':
@@ -107,7 +107,7 @@ def getCertainKeys(song_info):
             # elif key == 'lyrics':
             #     rinfo['lyrics'] = saavnAPI.get_lyrics(json_data['tiny_url'])
             else:
-                rinfo[key] = json_data[key]
+                rinfo[key] = json_data[key].strip()
 
     return rinfo
 
@@ -141,21 +141,22 @@ def getSongInfo(song_name, song_with_path, log_file, test=0):
     return song_info
 
 
-def downloadSong(song_name, download_dir, log_file, song_info, test=0):
+def downloadSong(download_dir, log_file, song_info, test=0):
     os.chdir(download_dir)
-    name_with_path = os.path.join(download_dir, song_name + '.mp3')
+    name_with_path = os.path.join(download_dir, song_info['title'] + '.mp3')
 
     if os.path.isfile(name_with_path):
-        old_name_with_path = os.path.join(download_dir, song_name + '_OLD.mp3')
-        print('Song already exists, renaming it to "' + song_name + '_OLD.mp3"')
+        old_name_with_path = os.path.join(download_dir, song_info['title'] + '_OLD.mp3')
+        print('Song already exists, renaming it to "' + song_info['title'] + '_OLD.mp3"')
 
         try:
             os.rename(name_with_path, old_name_with_path)
         except FileExistsError:
             os.remove(old_name_with_path)
+            os.rename(name_with_path, old_name_with_path)
 
     try:
-        print("Downloading {}.....".format(song_name))
+        print("Downloading '{}'.....".format(song_info['title']))
 
         raw_data = requests.get(song_info['url'], stream=True)
         with open(name_with_path, "wb") as raw_song:
@@ -176,7 +177,7 @@ def downloadSong(song_name, download_dir, log_file, song_info, test=0):
         return '-1'
 
 
-def addTags(downloaded_song_name_with_path, song_name, download_dir, log_file, song_info, test=0):
+def addTags(downloaded_song_name_with_path, download_dir, log_file, song_info, test=0):
     os.chdir(download_dir)
     try:
         tags = easyid3(downloaded_song_name_with_path)
@@ -197,7 +198,9 @@ def addTags(downloaded_song_name_with_path, song_name, download_dir, log_file, s
 
 def start(song_name, song_with_path, download_dir, log_file, test=0):
     song_info = getSongInfo(song_name, song_with_path, log_file, test=test)
-    downloaded_song_name_with_path = downloadSong(song_name, download_dir, log_file, song_info, test=test)
+    downloaded_song_name_with_path = downloadSong(download_dir, log_file, song_info, test=test)
 
     if downloaded_song_name_with_path != '-1':
-        addTags(downloaded_song_name_with_path, song_name, download_dir, log_file, song_info, test=test)
+        addTags(downloaded_song_name_with_path, download_dir, log_file, song_info, test=test)
+
+    print()
