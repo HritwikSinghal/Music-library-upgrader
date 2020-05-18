@@ -182,12 +182,6 @@ def saveTags(tag_name, tag_value_from_json, tags):
     print("Added " + tag_name)
 
 
-def checkAndFixTag(tags, tag_name, tag_value_from_json):
-    if (not isTagPresent(tags, tag_name)) or \
-            (tag_value_from_json != '' and tag_value_from_json != tags[tag_name]):
-        saveTags(tag_name, tag_value_from_json, tags)
-
-
 # ---------------------------------------------#
 
 def writeAndPrintLog(log_file, line, test=0):

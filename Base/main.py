@@ -1,11 +1,9 @@
-import json
 import os
 import re
-
 from os.path import isdir
 from os.path import isfile
 
-from Base import DownloadSong, saavnAPI
+from Base import DownloadSong
 from Base import tools
 
 
@@ -41,6 +39,16 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
     log_file = tools.createLogFile(song_dir)
     song_list = getSongList(files)
 
+    try:
+        print("Creating downloads directory in current folder...")
+        download_dir = os.path.join(song_dir, 'Downloaded_songs')
+        os.mkdir(download_dir)
+    except FileExistsError:
+        print("\nSince download directory already exists, I will save songs in it.")
+
+    # noinspection PyUnboundLocalVariable
+    print("Download dir =", download_dir, '\n')
+
     for song in song_list:
         song_with_path = os.path.join(song_dir, song)
 
@@ -50,7 +58,7 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
         print("Song Name: ", song_name)
 
         try:
-            DownloadSong.start(song_name, song_with_path, log_file, test=test)
+            DownloadSong.start(song_name, song_with_path, download_dir, log_file, test=test)
 
         except:
             tools.writeAndPrintLog(log_file, "\nError Downloading song={0}\n".format(song_name), test=test)

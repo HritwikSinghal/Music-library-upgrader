@@ -1,11 +1,20 @@
 import json
 import traceback
+import os
 
 import mutagen
+import requests
 from mutagen.easyid3 import EasyID3 as easyid3
 
 from Base import saavnAPI
 from Base import tools
+from Modules import addDateLenOrg
+from Modules import albumArt
+from Modules import albumName
+from Modules import artistName
+from Modules import composerName
+from Modules import songName
+from Modules import songTitle
 
 
 def printText(text, test=0):
@@ -104,11 +113,12 @@ def getCertainKeys(song_info):
 
 
 def getSong(song_info_list, song_name, tags):
-    pass
-    # implement it after fixing it in other project
+    return song_info_list[0]
+
+    # todo: implement it after fixing it in other project
 
 
-def start(song_name, song_with_path, log_file, test=0):
+def getSongInfo(song_name, song_with_path, log_file, test=0):
     baseUrl = "https://www.jiosaavn.com/search/"
     tags = easyid3(song_with_path)
 
@@ -129,3 +139,65 @@ def start(song_name, song_with_path, log_file, test=0):
     song_info = getCertainKeys(song)
 
     return song_info
+
+
+def downloadSong(song_name, download_dir, log_file, song_info, test=0):
+    os.chdir(download_dir)
+    name_with_path = os.path.join(download_dir, song_name + '.mp3')
+
+    if os.path.isfile(name_with_path):
+        old_name_with_path = os.path.join(download_dir, song_name + '_OLD.mp3')
+        print('Song already exists, renaming it to "' + song_name + '_OLD.mp3"')
+
+        try:
+            os.rename(name_with_path, old_name_with_path)
+        except FileExistsError:
+            os.remove(old_name_with_path)
+
+    try:
+        print("Downloading {}.....".format(song_name))
+
+        raw_data = requests.get(song_info['url'], stream=True)
+        with open(name_with_path, "wb") as raw_song:
+            for chunk in raw_data.iter_content(chunk_size=2048):
+                # writing one chunk at a time to mp3 file
+                if chunk:
+                    raw_song.write(chunk)
+
+        print("Song download successful.")
+        return name_with_path
+
+    except:
+        print("Song download failed...")
+
+        if os.path.isfile(name_with_path):
+            os.remove(name_with_path)
+
+        return '-1'
+
+
+def addTags(downloaded_song_name_with_path, song_name, download_dir, log_file, song_info, test=0):
+    os.chdir(download_dir)
+    try:
+        tags = easyid3(downloaded_song_name_with_path)
+    except:
+        print("This Song has no tags. Creating tags...")
+
+        tags = mutagen.File(downloaded_song_name_with_path, easy=True)
+        tags.add_tags()
+        print("Tags created.")
+
+    addDateLenOrg.start(tags, song_info)
+    albumName.start(tags, song_info)
+    artistName.start(tags, song_info)
+    composerName.start(tags, song_info)
+    songTitle.start(tags, song_info)
+    albumArt.start(song_info, download_dir, downloaded_song_name_with_path)
+
+
+def start(song_name, song_with_path, download_dir, log_file, test=0):
+    song_info = getSongInfo(song_name, song_with_path, log_file, test=test)
+    downloaded_song_name_with_path = downloadSong(song_name, download_dir, log_file, song_info, test=test)
+
+    if downloaded_song_name_with_path != '-1':
+        addTags(downloaded_song_name_with_path, song_name, download_dir, log_file, song_info, test=test)

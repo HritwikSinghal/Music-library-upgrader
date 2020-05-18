@@ -1,5 +1,4 @@
 from Base.tools import *
-from Base.tools import join
 
 
 def joinPathAndRename(old_name, newName, songDir, song_list):
@@ -7,10 +6,10 @@ def joinPathAndRename(old_name, newName, songDir, song_list):
     # we can edit the entry in list
 
     old_name_index = song_list.index(old_name)
-    newNameWithPath = join(songDir, newName)
+    newNameWithPath = os.path.join(songDir, newName)
 
     try:
-        os.rename(join(songDir, old_name), newNameWithPath)
+        os.rename(os.path.join(songDir, old_name), newNameWithPath)
         song_list[old_name_index] = newName
 
     except FileExistsError:
@@ -25,7 +24,7 @@ def joinPathAndRename(old_name, newName, songDir, song_list):
             del song_list[duplicate_file_index]
             print("File removed successfully. Now renaming new file.")
 
-            os.rename(join(songDir, old_name), newNameWithPath)
+            os.rename(os.path.join(songDir, old_name), newNameWithPath)
             print("File renamed successfully.")
 
             song_list[old_name_index] = newName
@@ -50,5 +49,5 @@ def fixName(songDir, old_name, song_list):
 
 
 def start(songDir, song, song_list):
-    changeDir(songDir)
+    os.chdir(songDir)
     fixName(songDir, song, song_list)

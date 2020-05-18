@@ -4,6 +4,7 @@ from Base import main
 
 
 def start(test=0):
+    # todo: print that all new songs will be downloaded in which folder
     main.start(test=test)
 
 
@@ -14,4 +15,4 @@ else:
 
 start(test=test)
 
-# todo:
+# todo: add logs
