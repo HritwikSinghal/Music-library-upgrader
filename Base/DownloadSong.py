@@ -91,10 +91,12 @@ def getCertainKeys(song_info):
                 rinfo['organization'] = json_data[key]
             elif key == 'image_url':
                 rinfo['image_url'] = tools.fixImageUrl(json_data[key])
-            # elif key == 'url':
-            #     rinfo['url'] = tools.decrypt_url(json_data[key])
+            elif key == 'url':
+                rinfo['url'] = saavnAPI.decrypt_url(json_data[key])
             elif key == 'tiny_url':
-                rinfo['lyrics_url'] = json_data[key]
+                rinfo['lyrics_url'] = json_data[key].replace("/song/", '/lyrics/')
+            # elif key == 'lyrics':
+            #     rinfo['lyrics'] = saavnAPI.get_lyrics(json_data['tiny_url'])
             else:
                 rinfo[key] = json_data[key]
 
@@ -102,51 +104,8 @@ def getCertainKeys(song_info):
 
 
 def getSong(song_info_list, song_name, tags):
-    # auto-match song
-    song = autoMatch(song_info_list, song_name, tags)
-    if song is not None:
-        return song
-
-    #############################
-    # print("STOP")
-    # x = input()
-    #############################
-
-    # if no song was matched, Ask user
-    print("\n-------------------------------"
-          "--------------------------------\n")
-
-    # printing the song list
-    i = 0
-    for song in song_info_list:
-        rel_keys = getCertainKeys(song)
-        print(i + 1, end=' ) \n')
-        for key in rel_keys:
-            if key != 'actual_album':
-                print('\t', key, ':', rel_keys[key])
-        print()
-        i += 1
-
-    # now asking user
-    song_number = input("\nEnter your song number from above list, if none matches, enter 'n': ")
-
-    try:
-        # if user entered 'n' or any letter, then conversion to int will fail and ValueError is raised
-
-        # check if the user entered an index number which was out of range of list, if yes, ask user again
-        if int(song_number) > len(song_info_list):
-            song_number = int(input("\nOops..You mistyped, \n"
-                                    "Please enter number within above range. If none matches, enter 'n': ")) - 1
-
-            if song_number > len(song_info_list):
-                return -1
-
-    # if user entered 'n' or any letter, return -1 (since no song was matched correctly)
-    except ValueError:
-        return -1
-
-    song_number = int(song_number)
-    return song_info_list[song_number - 1]
+    pass
+    # implement it after fixing it in other project
 
 
 def start(song_name, song_with_path, log_file, test=0):
@@ -156,57 +115,17 @@ def start(song_name, song_with_path, log_file, test=0):
     url = getURL(baseUrl, song_name, tags)
     printText(url, test=test)
 
-    # get a list of songs which match search
-    list_of_songs_with_info = jioSaavnApi.fetchList(url, log_file, test=test)
+    list_of_songs_with_info = saavnAPI.start(url, log_file, test=test)
 
-    # None can only be returned in case of any error, so we were not able to find data
-    if list_of_songs_with_info is None:
-        return None
-
-    ###########################
-    # tools.printList(list_of_songs_with_info)
-    # x = input()
-    ###########################
-
-    # if songs were found, get the correct song from that list
-    if len(list_of_songs_with_info) != 0:
-        song = getSong(list_of_songs_with_info, song_name, tags)
-
-    # else set retry flag to -1 so we can retry below
-    else:
-        print("Oops...Couldn't find the song in this turn, let me retry :p ..... ")
-        song = -1
-
-    # if retry flag is -1, retry, but search only using song name
-    # this flag was set by us if no songs were found in first try
-    # or it may be set by user when there are no matching songs in the list
-    # (the getSongs function returns -1 if user inputs 'n')
-
-    # in both cases, we have to retry search using song name
-
-    if song == -1:
+    if len(list_of_songs_with_info) < 1:
         list_of_songs_with_info.clear()
 
-        # new url based only on song name
         url = baseUrl + song_name
         printText(url, test=test)
 
-        list_of_songs_with_info = jioSaavnApi.fetchList(url, log_file, test=test)
+        list_of_songs_with_info = saavnAPI.start(url, log_file, test=test)
 
-        # None can only be returned in case of any error, so we were not able to find data
-        if list_of_songs_with_info is None:
-            return None
-
-        song = getSong(list_of_songs_with_info, song_name, tags)
-
-    # if we were still not able to find correct song in 2nd try, just return None
-    # (means we failed to find data about song)
-    if song == -1:
-        return None
-
-    # if the song was found in any of above cases, then we go below.
-    # the info we got had too much info, we will save only certain keys like artist from it
+    song = getSong(list_of_songs_with_info, song_name, tags)
     song_info = getCertainKeys(song)
 
-    # return those selected keys
     return song_info

@@ -13,7 +13,6 @@ from pyDes import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-json_decoder = json.JSONDecoder()
 user_agent = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
 }
@@ -59,7 +58,44 @@ def setProxy():
 
 # -------------------------------------------#
 
-def fetchList(url, log_file, test=0):
+def decrypt_url(url):
+    des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0", pad=None, padmode=PAD_PKCS5)
+    base_url = 'http://h.saavncdn.com'
+
+    enc_url = base64.b64decode(url.strip())
+    dec_url = des_cipher.decrypt(enc_url, padmode=PAD_PKCS5).decode('utf-8')
+    dec_url = base_url + dec_url[10:] + '_320.mp3'
+    r = requests.get(dec_url)
+    if str(r.status_code) != '200':
+        dec_url = dec_url.replace('_320.mp3', '.mp3')
+    return dec_url
+
+
+def get_lyrics(url):
+    try:
+        if '/song/' in url:
+            # url = url.replace("/song/", '/lyrics/')
+            source = requests.get(url).text
+            soup = BeautifulSoup(source, 'html5lib')
+            res = soup.find('p', class_='lyrics')
+            lyrics = str(res).replace("<br/>", "\n")
+            lyrics = lyrics.replace('<p class="lyrics"> ', '')
+            lyrics = lyrics.replace("</p>", '')
+            return (lyrics)
+    except Exception:
+        traceback.print_exc()
+        return
+
+
+def start(url, log_file, test=0):
+    # returns list of songs from search url.
+    # each element of list is a dict in json format with song data
+
+    proxies = fate_proxy()
+
+    if test:
+        print("Text Query Detected, Now in SaavnAPI.start()")
+
     try:
         res = requests.get(url, headers=user_agent, data=[('bitrate', '320')])
 
@@ -132,67 +168,19 @@ def fetchList(url, log_file, test=0):
                 if actual_album != '':
                     json_data['actual_album'] = actual_album
 
+            x = json.dumps(json_data, indent=2)
             #######################
             # print(actual_album)
             # print(x)
             # a = input()
             #######################
 
-            song_list.append(json_data)
+            song_list.append(x)
 
-        return list(song_list)
-
+        return song_list
     except Exception:
+        song_list = []
 
         print("invalid url...")
-        tools.writeAndPrintLog(log_file, "\n\nXXX-------invalid url---------\n", test=test)
-        return None
-
-
-def decrypt_url(url):
-    des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0", pad=None, padmode=PAD_PKCS5)
-    base_url = 'http://h.saavncdn.com'
-
-    enc_url = base64.b64decode(url.strip())
-    dec_url = des_cipher.decrypt(enc_url, padmode=PAD_PKCS5).decode('utf-8')
-    dec_url = base_url + dec_url[10:] + '_320.mp3'
-    r = requests.get(dec_url)
-    if str(r.status_code) != '200':
-        dec_url = dec_url.replace('_320.mp3', '.mp3')
-    return dec_url
-
-
-def get_lyrics(url):
-    try:
-        if '/song/' in url:
-            url = url.replace("/song/", '/lyrics/')
-            source = requests.get(url).text
-            soup = BeautifulSoup(source, 'html5lib')
-            res = soup.find('p', class_='lyrics')
-            lyrics = str(res).replace("<br/>", "\n")
-            lyrics = lyrics.replace('<p class="lyrics"> ', '')
-            lyrics = lyrics.replace("</p>", '')
-            return (lyrics)
-    except Exception:
-        traceback.print_exc()
-        return
-
-
-def start(url, log_file, test=0):
-    proxies = fate_proxy()
-
-    try:
-        print("Text Query Detected")
-        songs = fetchList(url, log_file, test=test)
-
-        for song in songs:
-            song['image_url'] = tools.fixImageUrl(song['image_url'])
-            song['title'] = tools.removeGibberish(song['title'])
-            song['url'] = decrypt_url(song['url'])
-            song['album'] = tools.removeGibberish(song['album'])
-            # song['lyrics'] = get_lyrics(song['tiny_url'])
-        return json.dumps(songs)
-
-    except:
         tools.writeAndPrintLog(log_file, '\nSaavnAPI error, url={}\n'.format(url), test=test)
-        return None
+        return song_list
