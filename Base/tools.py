@@ -98,7 +98,6 @@ def removeGibberish(oldName):
 
 
 def removeTrailingExtras(oldName):
-    # newName = re.sub(r'&quot;|&*amp', '', oldName)
     newName = re.sub(r';\s*;\s*', '; ', oldName)
     return newName.strip()
 

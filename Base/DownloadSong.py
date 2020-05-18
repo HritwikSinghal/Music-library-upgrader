@@ -8,13 +8,12 @@ from mutagen.easyid3 import EasyID3 as easyid3
 
 from Base import saavnAPI
 from Base import tools
-from Modules import addDateLenOrg
-from Modules import albumArt
-from Modules import albumName
-from Modules import artistName
-from Modules import composerName
-from Modules import songName
-from Modules import songTitle
+from Tags import addDateLenOrg
+from Tags import albumArt
+from Tags import albumName
+from Tags import artistName
+from Tags import composerName
+from Tags import songTitle
 
 
 def printText(text, test=0):
@@ -145,6 +144,7 @@ def downloadSong(download_dir, log_file, song_info, test=0):
     os.chdir(download_dir)
     name_with_path = os.path.join(download_dir, song_info['title'] + '.mp3')
 
+    # check if song name already exists in download folder
     if os.path.isfile(name_with_path):
         old_name_with_path = os.path.join(download_dir, song_info['title'] + '_OLD.mp3')
         print('Song already exists, renaming it to "' + song_info['title'] + '_OLD.mp3"')
@@ -155,6 +155,7 @@ def downloadSong(download_dir, log_file, song_info, test=0):
             os.remove(old_name_with_path)
             os.rename(name_with_path, old_name_with_path)
 
+    # Download Song
     try:
         print("Downloading '{}'.....".format(song_info['title']))
 
@@ -170,6 +171,7 @@ def downloadSong(download_dir, log_file, song_info, test=0):
 
     except:
         print("Song download failed...")
+        tools.writeAndPrintLog(log_file, "\nSong download failed...\n", test=test)
 
         if os.path.isfile(name_with_path):
             os.remove(name_with_path)
