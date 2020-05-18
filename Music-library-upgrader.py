@@ -21,7 +21,7 @@ def start(test=0):
 
         x = input()
 
-        if x == 1:
+        if x == '1':
             print("Starting Program....")
             main.start(test)
 

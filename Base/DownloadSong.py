@@ -1,4 +1,5 @@
 import json
+import re
 import traceback
 import os
 
@@ -142,12 +143,14 @@ def getSongInfo(song_name, song_with_path, log_file, test=0):
 
 def downloadSong(download_dir, log_file, song_info, test=0):
     os.chdir(download_dir)
-    name_with_path = os.path.join(download_dir, song_info['title'] + '.mp3')
+    name = re.sub(r'[?*<>|":]', '', song_info['title'])
+
+    name_with_path = os.path.join(download_dir, name + '.mp3')
 
     # check if song name already exists in download folder
     if os.path.isfile(name_with_path):
-        old_name_with_path = os.path.join(download_dir, song_info['title'] + '_OLD.mp3')
-        print('Song already exists, renaming it to "' + song_info['title'] + '_OLD.mp3"')
+        old_name_with_path = os.path.join(download_dir, name + '_OLD.mp3')
+        print('Song already exists, renaming it to "' + name + '_OLD.mp3"')
 
         try:
             os.rename(name_with_path, old_name_with_path)
@@ -157,7 +160,7 @@ def downloadSong(download_dir, log_file, song_info, test=0):
 
     # Download Song
     try:
-        print("Downloading '{}'.....".format(song_info['title']))
+        print("Downloading '{}'.....".format(name))
 
         raw_data = requests.get(song_info['url'], stream=True)
         with open(name_with_path, "wb") as raw_song:
