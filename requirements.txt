@@ -1,5 +1,7 @@
-requests
-bs4
-mutagen
+requests~=2.22.0
+bs4~=0.0.1
+mutagen~=1.44.0
 html5lib
-pyDes
+pyDes~=2.0.1
+urllib3~=1.25.7
+beautifulsoup4~=4.9.0

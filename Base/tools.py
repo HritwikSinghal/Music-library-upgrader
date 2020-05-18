@@ -199,6 +199,6 @@ def getLogFile(song_dir):
 def createLogFile(song_dir):
     os.chdir(song_dir)
     with open('Music-library-upgrader_LOGS.txt', 'w+') as log_file:
-        log_file.write("This is log file for Music-library-upgrader_LOGS. SongDir = " + song_dir + "\n\n")
+        log_file.write("This is log file for Music-library-upgrader. SongDir = " + song_dir + "\n\n")
 
     return getLogFile(song_dir)

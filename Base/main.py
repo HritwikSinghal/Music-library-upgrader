@@ -3,10 +3,12 @@ import re
 import json
 import mutagen
 from os.path import isfile, isdir
+
+import requests
 from mutagen.easyid3 import EasyID3 as easyid3
 import traceback
 
-from Base import tools, returnData
+from Base import tools, retrieveData, saavnAPI
 
 
 def inputSongDir(test=0):
@@ -42,11 +44,10 @@ def handleSongs(song_dir, files, sub_dir_flag=-1, test=0):
     song_list = getSongList(files)
 
     # add func to call below
-    url = 'https://www.jiosaavn.com/song/bhula-dunga/ClonZxt2GlY'
 
-    x = (returnData.start(url=url))
-    x = json.loads(x)
-    x = json.dumps(x, indent=2)
+    url = 'https://www.jiosaavn.com/album/aashiqui-2/-iNdCmFNV9o_'
+    x = retrieveData.start(url=url)
+    x = json.dumps(json.loads(x), indent=2)
     print(x)
 
 

@@ -5,11 +5,12 @@ import base64
 import os
 import json
 import ast
-from traceback import print_exc
+import traceback
 import re
+import urllib3.exceptions
 
-des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0", pad=None, padmode=PAD_PKCS5)
-base_url = 'http://h.saavncdn.com'
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 json_decoder = json.JSONDecoder()
 user_agent = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
@@ -46,7 +47,7 @@ def get_songs(query, proxies):
                             print(esc_text)
 
             except Exception as e:
-                print_exc()
+                traceback.print_exc()
                 continue
         if len(songs) > 0:
             return songs
@@ -78,6 +79,34 @@ def get_songs(query, proxies):
     return songs
 
 
+def getAlbumId(input_url, proxies):
+    try:
+        proxi, headers = setProxy()
+        res = requests.get(input_url, headers=headers)
+        if 'internal error' in res.text:
+            for p in proxies:
+                try:
+                    res = requests.get(input_url, proxies={"http": p, "https": p}, headers=headers, timeout=4)
+                    if 'internal error' in res.text:
+                        continue
+                    break
+                except Exception as e:
+                    print("Skipped this proxy")
+    except Exception as e:
+        print('Error accessing website error: ')
+        traceback.print_exc()
+
+    soup = BeautifulSoup(res.text, "html5lib")
+    try:
+        getAlbumID = soup.select(".play")[0]["onclick"]
+        getAlbumID = ast.literal_eval(re.search("\[(.*?)\]", getAlbumID).group())[1]
+        if getAlbumID is not None:
+            return getAlbumID
+    except Exception as e:
+        print(e)
+        pass
+
+
 def getAlbum(albumId, proxies):
     songs_json = []
     try:
@@ -105,69 +134,11 @@ def getAlbum(albumId, proxies):
     return songs_json
 
 
-def getPlayList(listId, proxies):
-    songs_json = []
+def get_lyrics(url):
     try:
-        response = requests.get(
-            'https://www.jiosaavn.com/api.php?listid={0}&_format=json&__call=playlist.getDetails'.format(listId),
-            verify=False)
-        if response.status_code == 200:
-            response_text = (response.text.splitlines())
-            songs_json = list(filter(lambda x: x.endswith("}"), response_text))[0]
-            songs_json = json.loads(songs_json)
-        return songs_json
-    except Exception as e:
-        print(e)
-        proxies = fate_proxy()
-        for proxy in proxies:
-            try:
-                response = requests.get(
-                    'https://www.jiosaavn.com/api.php?listid={0}&_format=json&__call=playlist.getDetails'.format(
-                        listId), verify=False, proxies={'http': proxy, 'https': proxy})
-                if response.status_code == 200:
-                    songs_json = list(filter(lambda x: x.endswith("}"), response.text.splitlines()))[0]
-                    songs_json = json.loads(songs_json)
-                return songs_json
-            except Exception:
-                pass
-    return songs_json
-
-
-def getListId(input_url, proxies):
-    p, headers = setProxy()
-    try:
-        res = requests.get(input_url, headers=headers)
-        if 'internal error' in res.text:
-            proxies = fate_proxy()
-            for proxy in proxies:
-                try:
-                    res = requests.get(input_url, proxies={"http": proxy, "https": proxy}, headers=headers)
-                    if 'internal error' in res.text:
-                        continue
-                    break
-                except Exception as e:
-                    print("Skipped this proxy")
-        # res = requests.get(input_url, proxies={"http": proxy, "https": proxy}, headers=headers)
-        # res = requests.get(input_url)
-    except Exception as e:
-        print_exc()
-
-    soup = BeautifulSoup(res.text, "html5lib")
-    # print(soup)
-
-    try:
-        getPlayListID = soup.select(".flip-layout")[0]["data-listid"]
-        if getPlayListID is not None:
-            return (getPlayListID)
-    except Exception as e:
-        print('Unable to scrape Playlist ID', e)
-
-
-def get_lyrics(link):
-    try:
-        if '/song/' in link:
-            link = link.replace("/song/", '/lyrics/')
-            source = requests.get(link).text
+        if '/song/' in url:
+            url = url.replace("/song/", '/lyrics/')
+            source = requests.get(url).text
             soup = BeautifulSoup(source, 'html5lib')
             res = soup.find('p', class_='lyrics')
             lyrics = str(res).replace("<br/>", "\n")
@@ -175,53 +146,14 @@ def get_lyrics(link):
             lyrics = lyrics.replace("</p>", '')
             return (lyrics)
     except Exception:
-        print_exc()
+        traceback.print_exc()
         return
 
 
-def AlbumId(input_url, proxies):
-    try:
-        proxi, headers = setProxy()
-        res = requests.get(input_url, headers=headers)
-        if 'internal error' in res.text:
-            for p in proxies:
-                try:
-                    res = requests.get(input_url, proxies={"http": p, "https": p}, headers=headers, timeout=4)
-                    if 'internal error' in res.text:
-                        continue
-                    break
-                except Exception as e:
-                    print("Skipped this proxy")
-    except Exception as e:
-        print('Error accessing website error: ')
-        print_exc()
-
-    soup = BeautifulSoup(res.text, "html5lib")
-    try:
-        getAlbumID = soup.select(".play")[0]["onclick"]
-        getAlbumID = ast.literal_eval(re.search("\[(.*?)\]", getAlbumID).group())[1]
-        if getAlbumID is not None:
-            return (getAlbumID)
-    except Exception as e:
-        print(e)
-        pass
-
-
-def getSongsJSON(listId, proxies):
-    url = 'https://www.jiosaavn.com/api.php?listid=' + str(listId) + '&_format=json&__call=playlist.getDetails'
-    response_json = requests.get(url).text
-    struct = {}
-    try:  # try parsing to dict
-        dataform = str(response_json).split('-->')[-1]
-        # print(dataform)
-        struct = json.loads(dataform)
-    except Exception as e:
-        print(e)
-        print("Error Occured while parsing json")
-    return struct
-
-
 def decrypt_url(url):
+    des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0", pad=None, padmode=PAD_PKCS5)
+    base_url = 'http://h.saavncdn.com'
+
     enc_url = base64.b64decode(url.strip())
     dec_url = des_cipher.decrypt(enc_url, padmode=PAD_PKCS5).decode('utf-8')
     dec_url = base_url + dec_url[10:] + '_320.mp3'
@@ -232,6 +164,7 @@ def decrypt_url(url):
 
 
 # -------------------------------------------#
+# todo: inspect below func's
 
 def fate_proxy():
     resp = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list')
@@ -256,7 +189,7 @@ def fate_proxy():
 def setProxy():
     base_url = 'http://h.saavncdn.com'
     proxy_ip = ''
-    if ('http_proxy' in os.environ):
+    if 'http_proxy' in os.environ:
         proxy_ip = os.environ['http_proxy']
     proxies = {
         'http': proxy_ip,
