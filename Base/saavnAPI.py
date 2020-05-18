@@ -1,13 +1,15 @@
+import ast
+import base64
+import json
+import os
+import re
+import traceback
+from Base import tools
+
 import requests
+import urllib3.exceptions
 from bs4 import BeautifulSoup
 from pyDes import *
-import base64
-import os
-import json
-import ast
-import traceback
-import re
-import urllib3.exceptions
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -15,6 +17,9 @@ json_decoder = json.JSONDecoder()
 user_agent = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
 }
+
+
+# -------------------------------------------#
 
 
 def get_songs(query, proxies):
@@ -116,22 +121,23 @@ def getAlbum(albumId, proxies):
         if response.status_code == 200:
             songs_json = list(filter(lambda x: x.startswith("{"), response.text.splitlines()))[0]
             songs_json = json.loads(songs_json)
-            return songs_json
+            return dict(songs_json)
     except Exception as e:
-        pass
-    for p in proxies:
+        traceback.print_exc()
+
+    for proxy in proxies:
         try:
             response = requests.get(
                 'https://www.saavn.com/api.php?_format=json&__call=content.getAlbumDetails&albumid={0}'.format(albumId),
-                verify=False, proxies={"http": p, "https": p}, timeout=4)
+                verify=False, proxies={"http": proxy, "https": proxy}, timeout=4)
             if response.status_code == 200:
                 songs_json = list(filter(lambda x: x.startswith("{"), response.text.splitlines()))[0]
                 songs_json = json.loads(songs_json)
-                return songs_json
+                return dict(songs_json)
         except Exception as e:
             print("Skipped proxy in album")
 
-    return songs_json
+    return dict(songs_json)
 
 
 def get_lyrics(url):
@@ -199,3 +205,53 @@ def setProxy():
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0'
     }
     return proxies, headers
+
+
+# -------------------------------------------#
+
+
+def start(url):
+    proxies = fate_proxy()
+
+    try:
+        print("All is well with query", url)
+        if '/song/' in url:
+            print("Song")
+            song = get_songs(url, proxies)[0]
+            song['image_url'] = tools.fixImageUrl(song['image_url'])
+            song['title'] = tools.removeGibberish(song['title'])
+            song['url'] = decrypt_url(song['url'])
+            song['album'] = tools.removeGibberish(song['album'])
+            # song['lyrics'] = get_lyrics(url)
+            return json.dumps(song)
+        elif '/search/' in url:
+            print("Text Query Detected")
+            songs = get_songs(url, proxies)
+            for song in songs:
+                song['image_url'] = tools.fixImageUrl(song['image_url'])
+                song['title'] = tools.removeGibberish(song['title'])
+                song['url'] = decrypt_url(song['url'])
+                song['album'] = tools.removeGibberish(song['album'])
+                # song['lyrics'] = get_lyrics(song['tiny_url'])
+            return json.dumps(songs)
+        elif '/album/' in url:
+            print("Album")
+            id = getAlbumId(url, proxies)
+            songs = getAlbum(id, proxies)
+
+            for song in songs["songs"]:
+                song['image'] = tools.fixImageUrl(song['image'])
+                song['song'] = tools.removeGibberish(song['song'])
+                song['album'] = tools.removeGibberish(song['album'])
+                # song['lyrics'] = get_lyrics(song['perma_url'])
+                song['encrypted_media_path'] = decrypt_url(song['encrypted_media_path'])
+            return json.dumps(songs)
+        raise AssertionError
+    except Exception as e:
+        errors = []
+        traceback.print_exc()
+        error = {
+            "status": str(e)
+        }
+        errors.append(error)
+        return json.dumps(errors)

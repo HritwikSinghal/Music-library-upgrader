@@ -1,14 +1,11 @@
 import os
 import re
-import json
-import mutagen
-from os.path import isfile, isdir
 
-import requests
-from mutagen.easyid3 import EasyID3 as easyid3
-import traceback
+from os.path import isdir
+from os.path import isfile
 
-from Base import tools, retrieveData, saavnAPI
+from Base import DownloadSong
+from Base import tools
 
 
 def inputSongDir(test=0):
@@ -34,7 +31,7 @@ def getSongList(files):
     return songs
 
 
-def handleSongs(song_dir, files, sub_dir_flag=-1, test=0):
+def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
     print('Now in ', song_dir)
 
     if sub_dir_flag == 0 and int(input("Do you upgrade songs in " + song_dir + " ?\n1 == Yes, 0 == NO\n")) == 0:
@@ -43,12 +40,18 @@ def handleSongs(song_dir, files, sub_dir_flag=-1, test=0):
     log_file = tools.createLogFile(song_dir)
     song_list = getSongList(files)
 
-    # add func to call below
+    for song in song_list:
+        song_with_path = os.path.join(song_dir, song)
 
-    url = 'https://www.jiosaavn.com/album/aashiqui-2/-iNdCmFNV9o_'
-    x = retrieveData.start(url=url)
-    x = json.dumps(json.loads(x), indent=2)
-    print(x)
+        song_name = tools.removeBitrate(song)
+        song_name = song_name.replace('.mp3', '')
+        song_name = song_name.strip()
+        print("Song Name: ", song_name)
+
+        try:
+            DownloadSong.start(song_name, log_file, test=test)
+        except:
+            tools.writeAndPrintLog(log_file, "", test=test)
 
 
 def start(test=0):
@@ -69,9 +72,9 @@ def start(test=0):
             if isfile(os.path.join(song_dir, x))
         ]
 
-        handleSongs(song_dir, files, test=test)
+        handleSongsInDir(song_dir, files, test=test)
 
     else:
         print("Walking down ", song_dir, "\b...")
         for curr_dir, sub_dirs, files in os.walk(song_dir, topdown=True):
-            handleSongs(curr_dir, files, sub_dir_flag, test=test)
+            handleSongsInDir(curr_dir, files, sub_dir_flag, test=test)

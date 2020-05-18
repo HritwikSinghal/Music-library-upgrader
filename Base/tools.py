@@ -1,6 +1,6 @@
-import traceback
 import os
 import re
+import traceback
 
 
 # -----------------------------------------------------#
@@ -158,6 +158,13 @@ def editDistDP(str1, str2, len_str1, len_str2):
                                    dp[i - 1][j - 1])  # Replace
 
     return dp[len_str1][len_str2]
+
+
+def printList(myList):
+    print('--------------')
+    for item in myList:
+        print(item)
+    print('--------------\n')
 
 
 # ---------------------------------------------#

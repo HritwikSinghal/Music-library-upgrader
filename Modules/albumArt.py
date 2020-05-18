@@ -1,14 +1,17 @@
 # method 1 link: https://stackoverflow.com/questions/42473832/embed-album-cover-to-mp3-with-mutagen-in-python-3
 # method 2 link: https://stackoverflow.com/questions/42665036/python-mutagen-add-image-cover-doesnt-work
 
-import requests
-import shutil
 import os
+import shutil
 import traceback
 
-from Base import tools
 import mutagen
-from mutagen.id3 import ID3, APIC, TIT2
+import requests
+from mutagen.id3 import APIC
+from mutagen.id3 import ID3
+from mutagen.id3 import TIT2
+
+from Base import tools
 
 
 def addAlbumArt(json_data, songNameWithPath):
