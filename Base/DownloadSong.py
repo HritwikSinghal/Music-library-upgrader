@@ -4,6 +4,8 @@ import traceback
 import os
 
 import mutagen
+from mutagen.mp3 import MP3
+
 import requests
 from mutagen.easyid3 import EasyID3 as easyid3
 
@@ -20,6 +22,12 @@ from Tags import songTitle
 def printText(text, test=0):
     if test:
         print(text)
+
+
+def mod(num):
+    if num >= 0:
+        return num
+    return -num
 
 
 def getURL(baseUrl, song_name, tags):
@@ -100,10 +108,10 @@ def getCertainKeys(song_info):
                 rinfo['organization'] = json_data[key].strip()
             elif key == 'image_url':
                 rinfo['image_url'] = tools.fixImageUrl(json_data[key])
-            elif key == 'url':
-                rinfo['url'] = saavnAPI.decrypt_url(json_data[key])
             elif key == 'tiny_url':
                 rinfo['lyrics_url'] = json_data[key].replace("/song/", '/lyrics/')
+            # elif key == 'url':
+            #     rinfo['url'] = saavnAPI.decrypt_url(json_data[key])
             # elif key == 'lyrics':
             #     rinfo['lyrics'] = saavnAPI.get_lyrics(json_data['tiny_url'])
             else:
@@ -112,22 +120,24 @@ def getCertainKeys(song_info):
     return rinfo
 
 
-def autoMatch(song_info_list, song_name, tags):
+def autoMatch(song_info_list, song_name, tags, song_with_path, test=0):
     for song in song_info_list:
         json_data = json.loads(song)
 
         #################################################
-        # print(json.dumps(json_data, indent=4))
-        # print()
-        # print(json_data['title'].lower().strip())
-        # print(song_name.lower().strip())
+        if test:
+            # print(json.dumps(json_data, indent=4))
+            print()
+            print(json_data['title'].lower().strip())
+            print(song_name.lower().strip())
         #################################################
 
         song_name = song_name.lower().strip()
         title = json_data['title'].lower().strip()
 
         ed1 = tools.editDistDP(song_name, title, len(song_name), len(title))
-        # print(ed1)
+        printText(ed1, test)
+
         if ed1 > 5:
             continue
 
@@ -138,12 +148,12 @@ def autoMatch(song_info_list, song_name, tags):
             #     album_from_json = json_data['actual_album'].lower().strip()
             # except KeyError:
             album_from_json = json_data['album'].lower().strip()
-
-            # print(album_from_json)
-            # print(album_from_tags)
-
             ed2 = tools.editDistDP(album_from_tags, album_from_json, len(album_from_tags), len(album_from_json))
-            # print(ed2)
+
+            if test:
+                print(album_from_json)
+                print(album_from_tags)
+                print(ed2)
 
             if ed2 >= 4:
                 continue
@@ -159,23 +169,36 @@ def autoMatch(song_info_list, song_name, tags):
             artist_from_tags = tools.removeTrailingExtras(artist_from_tags)
             artist_from_tags = tools.removeDup(artist_from_tags)
 
-            # print(artist_from_json)
-            # print(artist_from_tags)
-
             ed3 = tools.editDistDP(artist_from_tags, artist_from_json, len(artist_from_tags), len(artist_from_json))
-            # print(ed3)
+
+            if test:
+                print(artist_from_json)
+                print(artist_from_tags)
+                print(ed3)
 
             if ed3 >= 11:
                 continue
+
+        audio = MP3(song_with_path)
+        length_from_tags = int(audio.info.length)
+        length_from_json = int(json_data['duration'])
+
+        if test:
+            print(length_from_json)
+            print(length_from_tags)
+            print(mod(length_from_json) - length_from_tags)
+
+        if mod(length_from_json - length_from_tags) > 7:
+            continue
 
         return song
 
     return None
 
 
-def getSong(song_info_list, song_name, tags):
+def getSong(song_info_list, song_name, tags, song_with_path, test=0):
     # auto-match song
-    song = autoMatch(song_info_list, song_name, tags)
+    song = autoMatch(song_info_list, song_name, tags, song_with_path, test)
     if song is not None:
         return song
 
@@ -213,7 +236,16 @@ def getSong(song_info_list, song_name, tags):
 
 def getSongInfo(song_name, song_with_path, log_file, test=0):
     baseUrl = "https://www.jiosaavn.com/search/"
-    tags = easyid3(song_with_path)
+
+    try:
+        tags = easyid3(song_with_path)
+    except:
+        try:
+            tags = mutagen.File(song_with_path, easy=True)
+            tags.add_tags()
+        except:
+            tools.writeAndPrintLog(log_file, "\nerror in tags of user song..\n", test=test)
+            return
 
     url = getURL(baseUrl, song_name, tags)
     printText(url, test=test)
@@ -228,7 +260,7 @@ def getSongInfo(song_name, song_with_path, log_file, test=0):
 
         list_of_songs_with_info = saavnAPI.start(url, log_file, test=test)
 
-    song = getSong(list_of_songs_with_info, song_name, tags)
+    song = getSong(list_of_songs_with_info, song_name, tags, song_with_path, test)
     song_info = getCertainKeys(song)
 
     return song_info
@@ -255,7 +287,7 @@ def downloadSong(download_dir, log_file, song_info, test=0):
     try:
         print("Downloading '{}'.....".format(name))
 
-        raw_data = requests.get(song_info['url'], stream=True)
+        raw_data = requests.get(saavnAPI.decrypt_url(song_info['url']), stream=True)
         with open(name_with_path, "wb") as raw_song:
             for chunk in raw_data.iter_content(chunk_size=2048):
                 # writing one chunk at a time to mp3 file

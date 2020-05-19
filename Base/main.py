@@ -10,7 +10,8 @@ from Base import tools
 def inputSongDir(test=0):
     while True:
         if test == 1:
-            songDir = r'C:\Users\hritwik\Pictures\Camera Roll'
+            # songDir = r'C:\Users\hritwik\Pictures\Camera Roll'
+            songDir = r'C:\Users\hritwik\Pictures\test'
         else:
             songDir = input("Enter song dir:  ")
 
