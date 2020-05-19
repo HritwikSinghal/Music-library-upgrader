@@ -297,7 +297,7 @@ def getSongsInfo(song_name, song_with_path, log_file, test=0):
 
 def downloadSong(download_dir, log_file, song_info, test=0):
     os.chdir(download_dir)
-    name = re.sub(r'[?*<>|":]', '', song_info['title'])
+    name = re.sub(r'[?*<>|/\\":]', '', song_info['title'])
 
     name_with_path = os.path.join(download_dir, name + '.mp3')
 
