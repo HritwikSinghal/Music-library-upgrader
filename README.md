@@ -9,6 +9,13 @@ The purpose of this project is to upgrade old songs (1950's to 2000's) which are
 It will store downloaded songs of each dir in folder named 'Downloaded_songs'
 which will be located in the folder itself.
 
+Note: This library uses song name as param to search on web, so make sure the song name is 
+      as accurate as possible for max accuracy.
+      
+After name, if album is there in tags, it matches using it. After album, it matches using artist
+and finally using date. So if any of these tags is wrong,
+better to remove it.
+
 Installation:
 
 Clone this repository using
