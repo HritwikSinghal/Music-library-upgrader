@@ -219,6 +219,7 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
 
     # now asking user
     song_number = input("\nEnter your song number from above list, if none matches, enter 'n': ")
+    print('\n')
 
     try:
         if int(song_number) > len(song_info_list):
@@ -234,7 +235,7 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
     return song_info_list[song_number - 1]
 
 
-def getSongInfo(song_name, song_with_path, log_file, test=0):
+def getSongsInfo(song_name, song_with_path, log_file, test=0):
     baseUrl = "https://www.jiosaavn.com/search/"
 
     try:
@@ -252,15 +253,26 @@ def getSongInfo(song_name, song_with_path, log_file, test=0):
 
     list_of_songs_with_info = saavnAPI.start(url, log_file, test=test)
 
-    if len(list_of_songs_with_info) < 1:
+    if len(list_of_songs_with_info) > 0:
+        song = getSong(list_of_songs_with_info, song_name, tags, song_with_path, test)
+    else:
+        song = -1
+
+    if song == -1:
         list_of_songs_with_info.clear()
 
         url = baseUrl + song_name
         printText(url, test=test)
 
         list_of_songs_with_info = saavnAPI.start(url, log_file, test=test)
+        if list_of_songs_with_info is None:
+            return None
 
-    song = getSong(list_of_songs_with_info, song_name, tags, song_with_path, test)
+        song = getSong(list_of_songs_with_info, song_name, tags, song_with_path, test)
+
+    if song == -1:
+        return None
+
     song_info = getCertainKeys(song)
 
     return song_info
@@ -327,10 +339,13 @@ def addTags(downloaded_song_name_with_path, download_dir, log_file, song_info, t
 
 
 def start(song_name, song_with_path, download_dir, log_file, test=0):
-    song_info = getSongInfo(song_name, song_with_path, log_file, test=test)
+    song_info = getSongsInfo(song_name, song_with_path, log_file, test=test)
+    if song_info is None:
+        return
+
     downloaded_song_name_with_path = downloadSong(download_dir, log_file, song_info, test=test)
+    if downloaded_song_name_with_path == '-1':
+        return
 
-    if downloaded_song_name_with_path != '-1':
-        addTags(downloaded_song_name_with_path, download_dir, log_file, song_info, test=test)
-
+    addTags(downloaded_song_name_with_path, download_dir, log_file, song_info, test=test)
     print()
