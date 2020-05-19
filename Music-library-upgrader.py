@@ -48,4 +48,6 @@ else:
 
 start(test=test)
 
+# todo: add mode for old songs which checks year < 2000 and other fixes
 # todo: add logs
+# todo: add support to download songs from txt file with song names

@@ -188,7 +188,7 @@ def autoMatch(song_info_list, song_name, tags, song_with_path, test=0):
             print(length_from_tags)
             print(mod(length_from_json) - length_from_tags)
 
-        if mod(length_from_json - length_from_tags) > 7:
+        if mod(length_from_json - length_from_tags) > 10:
             continue
 
         return song
@@ -201,10 +201,27 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
     song = autoMatch(song_info_list, song_name, tags, song_with_path, test)
     if song is not None:
         return song
+    print("\n-------------------------------"
+          "--------------------------------")
+    print("-------------------------------"
+          "--------------------------------\n")
+
+    print("Your song info...")
+    print('Name  : ', song_name)
+    for key in tags.keys():
+        print(key, ":", tags[key][0])
 
     # if no song was matched, Ask user
+    not_to_show_keys = [
+        'image_url',
+        'actual_album',
+        'url',
+        'lyrics_url',
+        'e_songid'
+    ]
+
     print("\n-------------------------------"
-          "--------------------------------\n")
+          "\nDownloaded songs info, select song number to download.")
 
     # printing the song list
     i = 0
@@ -212,7 +229,7 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
         rel_keys = getCertainKeys(song)
         print(i + 1, end=' ) \n')
         for key in rel_keys:
-            if key != 'actual_album':
+            if key not in not_to_show_keys:
                 print('\t', key, ':', rel_keys[key])
         print()
         i += 1
