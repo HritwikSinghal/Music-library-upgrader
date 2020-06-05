@@ -19,56 +19,107 @@ user_agent = {
 
 
 # -------------------------------------------#
-# todo: inspect below func's
-
-def fate_proxy():
-    resp = requests.get('https://raw.githubusercontent.com/fate0/proxylist/master/proxy.list')
-    a = resp.text.split('\n')
-    p_list = []
-    for i in a:
-        try:
-            p_list.append(json.loads(i))
-        except Exception as e:
-            continue
-    np_list = []
-    for i in p_list:
-        if i['country'] == 'IN':
-            np_list.append(i)
-    proxy = []
-    fast_proxy = sorted(np_list, key=lambda k: k['response_time'])
-    for p in fast_proxy:
-        proxy.append(str(p['host']) + ':' + str(p['port']))
-    return proxy
-
-
-def setProxy():
-    base_url = 'http://h.saavncdn.com'
-    proxy_ip = ''
-    if 'http_proxy' in os.environ:
-        proxy_ip = os.environ['http_proxy']
-    proxies = {
-        'http': proxy_ip,
-        'https': proxy_ip,
-    }
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:49.0) Gecko/20100101 Firefox/49.0'
-    }
-    return proxies, headers
-
-
-# -------------------------------------------#
 
 def decrypt_url(url):
     des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0", pad=None, padmode=PAD_PKCS5)
-    base_url = 'http://h.saavncdn.com'
-
     enc_url = base64.b64decode(url.strip())
     dec_url = des_cipher.decrypt(enc_url, padmode=PAD_PKCS5).decode('utf-8')
-    dec_url = base_url + dec_url[10:] + '_320.mp3'
-    r = requests.get(dec_url)
-    if str(r.status_code) != '200':
-        dec_url = dec_url.replace('_320.mp3', '.mp3')
-    return dec_url
+    dec_url = re.sub('_96.mp4', '_320.mp3', dec_url)
+    print(dec_url)
+
+    try:
+        aac_url = dec_url[:]
+        h_url = aac_url.replace('aac.saavncdn.com', 'h.saavncdn.com')
+
+        # ---------------------------------------------------------#
+
+        # check for 320 mp3 on aac.saavncdn.com
+        r = requests.head(aac_url, allow_redirects=True)
+        if str(r.status_code) == '200':
+            return aac_url
+
+        # check for 320 mp3 on h.saavncdn.com
+        r = requests.head(h_url, allow_redirects=True)
+        if str(r.status_code) == '200':
+            return aac_url
+
+        # ---------------------------------------------------------#
+
+        # check for 160 mp3 on aac.saavncdn.com
+        aac_url = aac_url.replace('_320.mp3', '_160.mp3')
+        r = requests.head(h_url, allow_redirects=True)
+        if str(r.status_code) == '200':
+            return aac_url
+
+        # check for 160 mp3 on h.saavncdn.com
+        h_url = h_url.replace('_320.mp3', '_160.mp3')
+        r = requests.head(h_url, allow_redirects=True)
+        if str(r.status_code) == '200':
+            return aac_url
+
+        # ---------------------------------------------------------#
+        # check for 128 mp3 on aac.saavncdn.com
+        aac_url = aac_url.replace('_320.mp3', '.mp3')
+        r = requests.head(h_url, allow_redirects=True)
+        if str(r.status_code) == '200':
+            return aac_url
+
+        # check for 128 mp3 on h.saavncdn.com
+        h_url = h_url.replace('_320.mp3', '.mp3')
+        r = requests.head(h_url, allow_redirects=True)
+        if str(r.status_code) == '200':
+            return aac_url
+
+        # ---------------------------------------------------------#
+        # ---------------------------------------------------------#
+        # ---------------------------------------------------------#
+        # now trying for m4a
+        # Edit: skipped m4a support as of now
+
+        # aac_url = dec_url[:].replace(".mp3", '.mp4')
+        # h_url = aac_url.replace('aac.saavncdn.com', 'h.saavncdn.com')
+        #
+        # # ---------------------------------------------------------#
+        #
+        # # check for 320 m4a on aac.saavncdn.com
+        # r = requests.head(aac_url, allow_redirects=True)
+        # if str(r.status_code) == '200':
+        #     return aac_url
+        #
+        # # check for 320 m4a on h.saavncdn.com
+        # r = requests.head(h_url, allow_redirects=True)
+        # if str(r.status_code) == '200':
+        #     return aac_url
+        #
+        # # ---------------------------------------------------------#
+        #
+        # # check for 160 m4a on aac.saavncdn.com
+        # aac_url = aac_url.replace('_320.mp4', '_160.mp4')
+        # r = requests.head(h_url, allow_redirects=True)
+        # if str(r.status_code) == '200':
+        #     return aac_url
+        #
+        # # check for 160 m4a on h.saavncdn.com
+        # h_url = h_url.replace('_320.mp4', '_160.mp4')
+        # r = requests.head(h_url, allow_redirects=True)
+        # if str(r.status_code) == '200':
+        #     return aac_url
+        #
+        # # ---------------------------------------------------------#
+        # # check for 128 m4a on aac.saavncdn.com
+        # aac_url = aac_url.replace('_320.mp4', '.mp4')
+        # r = requests.head(h_url, allow_redirects=True)
+        # if str(r.status_code) == '200':
+        #     return aac_url
+        #
+        # # check for 128 m4a on h.saavncdn.com
+        # h_url = h_url.replace('_320.mp4', '.mp4')
+        # r = requests.head(h_url, allow_redirects=True)
+        # if str(r.status_code) == '200':
+        #     return aac_url
+
+    except:
+        return None
 
 
 def get_lyrics(url):
@@ -90,8 +141,6 @@ def get_lyrics(url):
 def start(url, log_file, test=0):
     # returns list of songs from search url.
     # each element of list is a dict in json format with song data
-
-    proxies = fate_proxy()
 
     try:
         res = requests.get(url, headers=user_agent, data=[('bitrate', '320')])
