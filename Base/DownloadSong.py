@@ -19,6 +19,12 @@ from Tags import composerName
 from Tags import songTitle
 
 
+
+user_agent = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
+}
+
+
 def printText(text, test=0):
     if test:
         print(text)
@@ -316,7 +322,7 @@ def downloadSong(download_dir, log_file, song_info, test=0):
     try:
         print("Downloading '{}'.....".format(name))
 
-        raw_data = requests.get(saavnAPI.decrypt_url(song_info['url']), stream=True)
+        raw_data = requests.get(saavnAPI.decrypt_url(song_info['url']), stream=True, headers=user_agent)
         with open(name_with_path, "wb") as raw_song:
             for chunk in raw_data.iter_content(chunk_size=2048):
                 # writing one chunk at a time to mp3 file
