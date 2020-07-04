@@ -35,7 +35,7 @@ def start(test=0):
 
         if x == '1':
             print("Starting Program....")
-            # main.start(test)
+            main.start(test)
 
             print("""
                     If there were errors during running this program, please upload log file
