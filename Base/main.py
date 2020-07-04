@@ -3,13 +3,13 @@ import re
 from os.path import isdir
 from os.path import isfile
 
-from Base import DownloadSong
+from Base import downloadSong
 from Base import tools
 
 
 def inputSongDir(test=0):
     while True:
-        if test == 1:
+        if test:
             songDir = r'/home/hritwik/Videos/CR'
         else:
             songDir = input("Enter song dir:  ")
@@ -33,7 +33,7 @@ def getSongList(files):
 def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
     print('Now in ', song_dir)
 
-    if sub_dir_flag == 0 and int(input("Do you upgrade songs in " + song_dir + " ?\n1 == Yes, 0 == NO\n")) == 0:
+    if not sub_dir_flag and not int(input("Do you upgrade songs in " + song_dir + " ?\n1 == Yes, 0 == NO\n")):
         return
 
     log_file = tools.createLogFile(song_dir)
@@ -44,7 +44,8 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
         download_dir = os.path.join(song_dir, 'Downloaded_songs')
         os.mkdir(download_dir)
     except FileExistsError:
-        print("\nSince download directory already exists, I will save songs in it.")
+        print(
+            "\n ==================== Since download directory already exists, I will save songs in it. ==================== ")
 
     # noinspection PyUnboundLocalVariable
     print("Download dir =", download_dir, '\n')
@@ -59,16 +60,18 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
         print("Song Name: ", song_name)
 
         try:
-            DownloadSong.start(song_name, song_with_path, download_dir, log_file, test=test)
-
+            downloadSong.start(song_name, song_with_path, download_dir, log_file, test=test)
         except:
-            tools.writeAndPrintLog(log_file, "\nError Downloading song={0}\n".format(song_name), test=test)
+            print(" ==================== There Was Some Error Downloading {0} ==================== ".format(song_name))
+            tools.writeAndPrintLog(log_file,
+                                   "\n ==================== Error Downloading song={0} ==================== \n".format(
+                                       song_name), test=test)
 
 
 def start(test=0):
     song_dir = inputSongDir(test)
 
-    if test == 1:
+    if test:
         sub_dir_flag = -1
     else:
         sub_dir_flag = int(input("\nDo you want to run this program in all sub-dirs?\n"

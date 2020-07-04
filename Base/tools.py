@@ -120,12 +120,6 @@ def removeDup(old_name):
 
 # ---------------------------------------------#
 
-def fixImageUrl(oldUrl):
-    url = str(oldUrl)
-    url = url.replace('150x150', '500x500')
-    return url
-
-
 def editDistDP(str1, str2, len_str1, len_str2):
     # Create a table to store results of subproblems
     dp = [[0 for x in range(len_str2 + 1)] for x in range(len_str1 + 1)]
@@ -166,19 +160,17 @@ def printList(myList):
     print('--------------\n')
 
 
-# ---------------------------------------------#
+def printDict(myDict):
+    print('-----------')
+    for key, value in myDict.items():
+        print(key, ':', value)
+    print('-----------')
 
 
 def isTagPresent(tags, tag_name):
     if tag_name in tags.keys() and tags[tag_name] != '':
         return True
     return False
-
-
-def saveTags(tag_name, tag_value_from_json, tags):
-    tags[tag_name] = tag_value_from_json
-    tags.save()
-    print("Added " + tag_name)
 
 
 # ---------------------------------------------#

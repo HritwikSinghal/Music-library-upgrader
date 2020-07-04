@@ -7,10 +7,22 @@ def start(test=0):
     if test:
         main.start(1)
     else:
+
+        print("""
+            ___  ___          _        _     _ _                            _   _                           _           
+            |  \/  |         (_)      | |   (_) |                          | | | |                         | |          
+            | .  . |_   _ ___ _  ___  | |    _| |__  _ __ __ _ _ __ _   _  | | | |_ __   __ _ _ __ __ _  __| | ___ _ __ 
+            | |\/| | | | / __| |/ __| | |   | | '_ \| '__/ _` | '__| | | | | | | | '_ \ / _` | '__/ _` |/ _` |/ _ \ '__|
+            | |  | | |_| \__ \ | (__  | |___| | |_) | | | (_| | |  | |_| | | |_| | |_) | (_| | | | (_| | (_| |  __/ |   
+            \_|  |_/\__,_|___/_|\___| \_____/_|_.__/|_|  \__,_|_|   \__, |  \___/| .__/ \__, |_|  \__,_|\__,_|\___|_|   
+                                                                     __/ |       | |     __/ |                          
+                                                                    |___/        |_|    |___/                           
+                """)
+
         print("""
             This program will Download songs songs in your library with upgraded quality.
             For more info, visit https://github.com/HritwikSinghal/Music-library-upgrader
-        """)
+                """)
 
         print('''
             Warning: This program is in early stages so it may download wrong song sometimes.
@@ -23,7 +35,7 @@ def start(test=0):
 
         if x == '1':
             print("Starting Program....")
-            main.start(test)
+            # main.start(test)
 
             print("""
                     If there were errors during running this program, please upload log file
