@@ -91,4 +91,5 @@ def start(test=0):
     else:
         print("Walking down ", song_dir, "\b...")
         for curr_dir, sub_dirs, files in os.walk(song_dir, topdown=True):
-            handleSongsInDir(curr_dir, files, sub_dir_flag, test=test)
+            if 'Downloaded_songs' not in curr_dir:
+                handleSongsInDir(curr_dir, files, sub_dir_flag, test=test)
