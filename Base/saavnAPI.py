@@ -108,7 +108,7 @@ def getURL(baseUrl, song_name, tags):
 
 
 def fix(song_info, test=0):
-    oldArtist = song_info["primary_artists"]
+    oldArtist = song_info["primary_artists"].replace('&#039;', '')
     newArtist = tools.removeGibberish(oldArtist)
     newArtist = tools.divideBySColon(newArtist)
     newArtist = tools.removeTrailingExtras(newArtist)
