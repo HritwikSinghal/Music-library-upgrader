@@ -10,7 +10,7 @@ from Base import tools
 def inputSongDir(test=0):
     while True:
         if test:
-            songDir = r'/home/hritwik/Videos/CR'
+            songDir = r'C:\Users\Hritwik\Videos\test2'
         else:
             songDir = input("Enter song dir:  ")
 
@@ -72,7 +72,7 @@ def start(test=0):
     song_dir = inputSongDir(test)
 
     if test:
-        sub_dir_flag = -1
+        sub_dir_flag = 0
     else:
         sub_dir_flag = int(input("\nDo you want to run this program in all sub-dirs?\n"
                                  "1 == Yes,\n-1 == No,\n0 == Ask in each Dir\n"))

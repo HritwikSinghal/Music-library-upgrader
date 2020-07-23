@@ -149,12 +149,12 @@ def fix(song_info, test=0):
         # json_data = re.sub(r'.\(\b.*?"\)', "", str(info.text))
         # json_data = re.sub(r'.\[\b.*?"\]', "", json_data)
         # actual_album = ''
+
     else:
         song_info['actual_album'] = ''
 
     song_info['title'] = tools.removeGibberish(song_info['title'])
     song_info["album"] = tools.removeGibberish(song_info["album"]).strip()
-    # song_info["album"] = song_info["album"] + ' (' + song_info['year'] + ')'
 
     if test:
         print(json.dumps(song_info, indent=2))
@@ -205,6 +205,10 @@ def retrieveData(url, log_file, test=0):
 
     if int(data['total']) == 0:
         return None
+
+    if test:
+        with open('song_info.txt', 'w+', encoding='utf-8') as mf:
+            json.dump(data, mf, indent=4)
 
     songs_info = getSongInfo(data, log_file, test=test)
     return songs_info

@@ -183,7 +183,7 @@ def getDownloadSongsInfo(song_name, song_with_path, tags, log_file, test=0):
     return song_info
 
 
-def downloadSong(download_dir, log_file, song_info, test=0):
+def downloadSong(song_info, download_dir, log_file, test=0):
     dec_url = saavnAPI.decrypt_url(song_info['encrypted_media_url'], test=test)
     filename = song_info['title'] + '.m4a'
     filename = re.sub(r'[?*<>|/\\":]', '', filename)
@@ -206,7 +206,14 @@ def addTags(filename, json_data, log_file, test=0):
 
     audio['\xa9nam'] = html.unescape(str(json_data['title']))
     audio['\xa9ART'] = html.unescape(str(json_data['primary_artists']))
-    audio['\xa9alb'] = html.unescape(str(json_data['album']))
+
+    if json_data['actual_album'] == '':
+        audio['\xa9alb'] = html.unescape(str(json_data['album'] +
+                                             ' (' + json_data['year'] + ')'))
+    else:
+        audio['\xa9alb'] = html.unescape(str(json_data['actual_album'] +
+                                             ' (' + json_data['year'] + ')'))
+
     audio['aART'] = html.unescape(str(json_data['singers']))
     audio['\xa9wrt'] = html.unescape(str(json_data['music']))
     audio['desc'] = html.unescape(str(json_data['starring']))
@@ -233,7 +240,7 @@ def start(song_name, song_with_path, download_dir, log_file, test=0):
         return
 
     # noinspection PyTypeChecker
-    location = downloadSong(download_dir, log_file, song_info, test=test)
+    location = downloadSong(song_info, download_dir, log_file, test=test)
 
     # noinspection PyTypeChecker
     addTags(location, song_info, log_file, test=test)
