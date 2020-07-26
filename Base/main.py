@@ -40,9 +40,13 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
     song_list = getSongList(files)
 
     try:
-        print("Creating downloads directory in current folder...")
+        print("Creating downloads and done directory in current folder...")
+
         download_dir = os.path.join(song_dir, 'Downloaded_songs')
+        done_dir = os.path.join(song_dir, 'Done')
+
         os.mkdir(download_dir)
+        os.mkdir(done_dir)
     except FileExistsError:
         print(
             "\n ==================== Since download directory already exists, I will save songs in it. ==================== ")
@@ -51,8 +55,6 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
     print("Download dir =", download_dir, '\n')
 
     for song in song_list:
-        song_with_path = os.path.join(song_dir, song)
-
         song_name = tools.removeBitrate(song)
         song_name = tools.removeGibberish(song_name)
         song_name = song_name.replace('.mp3', '')
@@ -60,7 +62,7 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
         print("Song Name: ", song_name)
 
         try:
-            downloadSong.start(song_name, song_with_path, download_dir, log_file, test=test)
+            downloadSong.start(song_name, song_dir, download_dir, log_file, test=test)
         except:
             print(" ==================== There Was Some Error Downloading {0} ==================== ".format(song_name))
             tools.writeAndPrintLog(log_file,
@@ -72,7 +74,7 @@ def start(test=0):
     song_dir = inputSongDir(test)
 
     if test:
-        sub_dir_flag = 0
+        sub_dir_flag = -1
     else:
         sub_dir_flag = int(input("\nDo you want to run this program in all sub-dirs?\n"
                                  "1 == Yes,\n-1 == No,\n0 == Ask in each Dir\n"))

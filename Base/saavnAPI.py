@@ -103,7 +103,9 @@ def getURL(baseUrl, song_name, tags):
     elif tools.isTagPresent(tags, 'date'):
         url = baseUrl.format(song_name + ' ' + tags['date'][0])
     else:
+        # todo: change below
         url = baseUrl.format(song_name)
+        # url = baseUrl.format(song_name + ' Rafi')
     return url.replace(" ", '+')
 
 

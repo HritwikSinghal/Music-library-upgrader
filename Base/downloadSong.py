@@ -10,6 +10,7 @@ from mutagen.easyid3 import EasyID3 as easyid3
 import requests
 from mutagen.mp3 import *
 from mutagen.mp4 import *
+import shutil
 
 from Base import saavnAPI
 from Base import tools
@@ -117,17 +118,10 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
     #############################
     print("\n-------------------------------"
           "--------------------------------")
-    print("-------------------------------"
-          "--------------------------------\n")
-
-    print("Your song info...")
-    print('Name  : ', song_name)
-    for key in tags.keys():
-        print(key, ":", tags[key][0])
 
     # if no song was matched, Ask user
 
-    print("\n-------------------------------"
+    print("-------------------------------"
           "\nFrom Below, Select song number.")
 
     # printing the song list
@@ -142,13 +136,21 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
         'primary_artists'
     ]
 
-    i = 0
-    for song in song_info_list:
-        print(i + 1, end=' ) \n')
+    i = len(song_info_list)
+    for song in reversed(song_info_list):
+        print(i, end=' ) \n')
         for key in keys:
             print('\t', key.title(), ':', song[key])
         print()
-        i += 1
+        i -= 1
+
+    print("-------------------------------"
+          "--------------------------------\n")
+
+    print("Your song info...")
+    print('Name  : ', song_name)
+    for key in tags.keys():
+        print(key, ":", tags[key][0])
 
     # now asking user
     song_number = input("\nEnter your song number from above list, if none matches, enter 'n': ")
@@ -183,22 +185,43 @@ def getDownloadSongsInfo(song_name, song_with_path, tags, log_file, test=0):
     return song_info
 
 
-def downloadSong(song_info, download_dir, log_file, test=0):
+def downloadSong(song_dir, song_name, song_info, download_dir, log_file, test=0):
     dec_url = saavnAPI.decrypt_url(song_info['encrypted_media_url'], test=test)
     filename = song_info['title'] + '.m4a'
     filename = re.sub(r'[?*<>|/\\":]', '', filename)
 
-    location = os.path.join(download_dir, filename)
+    save_location = os.path.join(download_dir, filename)
 
     print("Downloading '{0}'.....".format(song_info['title']))
+
     raw_data = requests.get(dec_url, stream=True, headers=headers)
-    with open(location, "wb") as raw_song:
+    with open(save_location, "wb") as raw_song:
         for chunk in raw_data.iter_content(chunk_size=2048):
             if chunk:
                 raw_song.write(chunk)
+
     print("Download Successful")
 
-    return location
+    if test:
+        print("\nMoving song to done Dir....")
+        try:
+            moveSong(song_dir, song_name)
+        except:
+            traceback.print_exc()
+            print("Some error occured in moving...")
+
+    return save_location
+
+
+def moveSong(song_dir, song_name):
+    old_path = os.path.join(song_dir, song_name) + '.mp3'
+    new_path = os.path.join(os.path.join(song_dir, 'Done'), song_name) + '.mp3'
+    try:
+        shutil.move(old_path, new_path)
+        print("Song Moved")
+    except:
+        traceback.print_exc()
+        print("Error Moving")
 
 
 def addTags(filename, json_data, log_file, test=0):
@@ -220,6 +243,8 @@ def addTags(filename, json_data, log_file, test=0):
     audio['\xa9gen'] = html.unescape(str(json_data['label']))
     audio['\xa9day'] = html.unescape(str(json_data['year']))
 
+    audio.save()
+
     cover_url = str(json_data['image'])
     fd = urllib.request.urlopen(cover_url)
     cover = MP4Cover(fd.read(), getattr(MP4Cover, 'FORMAT_PNG' if cover_url.endswith('png') else 'FORMAT_JPEG'))
@@ -229,7 +254,9 @@ def addTags(filename, json_data, log_file, test=0):
     audio.save()
 
 
-def start(song_name, song_with_path, download_dir, log_file, test=0):
+def start(song_name, song_dir, download_dir, log_file, test=0):
+    song_with_path = os.path.join(song_dir, song_name) + '.mp3'
+
     try:
         tags = easyid3(song_with_path)
     except:
@@ -240,7 +267,7 @@ def start(song_name, song_with_path, download_dir, log_file, test=0):
         return
 
     # noinspection PyTypeChecker
-    location = downloadSong(song_info, download_dir, log_file, test=test)
+    location = downloadSong(song_dir, song_name, song_info, download_dir, log_file, test=test)
 
     # noinspection PyTypeChecker
     addTags(location, song_info, log_file, test=test)
