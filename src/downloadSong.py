@@ -2,18 +2,17 @@ import html
 import json
 import os
 import re
+import shutil
 import traceback
 import urllib
 
-import mutagen
-from mutagen.easyid3 import EasyID3 as easyid3
 import requests
+from mutagen.easyid3 import EasyID3 as easyid3
 from mutagen.mp3 import *
 from mutagen.mp4 import *
-import shutil
 
-from Base import saavnAPI
-from Base import tools
+from src import saavnAPI
+from src import tools
 
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0',
@@ -112,6 +111,10 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
     if song is not None:
         return song
 
+    # todo: remove this ;-)
+    if test:
+        return None
+
     #############################
     # print("STOP")
     # x = input()
@@ -176,11 +179,11 @@ def getSong(song_info_list, song_name, tags, song_with_path, test=0):
 
 def getDownloadSongsInfo(song_name, song_with_path, tags, log_file, test=0):
     list_of_songs = saavnAPI.start(song_name, tags, log_file, test=test)
-    song_info = getSong(list_of_songs, song_name, tags, song_with_path, test=test)
+    song_info: list = getSong(list_of_songs, song_name, tags, song_with_path, test=test)
 
     if song_info is None:
         list_of_songs = saavnAPI.start(song_name, tags, log_file, retry_flag=1, test=test)
-        song_info = getSong(list_of_songs, song_name, tags, song_with_path, test=test)
+        song_info: list = getSong(list_of_songs, song_name, tags, song_with_path, test=test)
 
     return song_info
 
@@ -202,20 +205,19 @@ def downloadSong(song_dir, song_name, song_info, download_dir, log_file, test=0)
 
     print("Download Successful")
 
-    if test:
-        print("\nMoving song to done Dir....")
-        try:
-            moveSong(song_dir, song_name)
-        except:
-            traceback.print_exc()
-            print("Some error occured in moving...")
+    print("\nMoving song to done Dir....")
+    try:
+        moveSong(song_dir, song_name)
+    except:
+        traceback.print_exc()
+        print("Some error occured in moving...")
 
     return save_location
 
 
 def moveSong(song_dir, song_name):
-    old_path = os.path.join(song_dir, song_name) + '.mp3'
-    new_path = os.path.join(os.path.join(song_dir, 'Done'), song_name) + '.mp3'
+    old_path = os.path.join(song_dir, song_name)
+    new_path = os.path.join(os.path.join(song_dir, 'Done'), song_name)
     try:
         shutil.move(old_path, new_path)
         print("Song Moved")
@@ -254,21 +256,25 @@ def addTags(filename, json_data, log_file, test=0):
     audio.save()
 
 
-def start(song_name, song_dir, download_dir, log_file, test=0):
-    song_with_path = os.path.join(song_dir, song_name) + '.mp3'
+def start(song, song_dir, download_dir, log_file, test=0):
+    stripped_song_name = tools.removeBitrate(song)
+    stripped_song_name = tools.removeGibberish(stripped_song_name)
+    stripped_song_name = stripped_song_name.replace('.mp3', '')
+    stripped_song_name = stripped_song_name.strip()
+    print("Song Name: ", stripped_song_name)
+
+    song_with_path = os.path.join(song_dir, song)
 
     try:
         tags = easyid3(song_with_path)
     except:
         tags = {}
 
-    song_info = getDownloadSongsInfo(song_name, song_with_path, tags, log_file, test=test)
+    song_info = getDownloadSongsInfo(stripped_song_name, song_with_path, tags, log_file, test=test)
     if song_info is None:
         return
 
-    # noinspection PyTypeChecker
-    location = downloadSong(song_dir, song_name, song_info, download_dir, log_file, test=test)
+    location = downloadSong(song_dir, song, song_info, download_dir, log_file, test=test)
 
-    # noinspection PyTypeChecker
     addTags(location, song_info, log_file, test=test)
     print()

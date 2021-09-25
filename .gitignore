@@ -1,9 +1,9 @@
 .idea/
 __pycache__/
-Base/apiKey.py
+src/apiKey.py
 song.txt
-Base/test_bit.py
-Base/test_bit.py
+src/test_bit.py
+src/test_bit.py
 
 # PyBuilder
 target/

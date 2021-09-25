@@ -7,7 +7,7 @@ import requests
 import urllib3.exceptions
 from pyDes import *
 
-from Base import tools
+from src import tools
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -104,8 +104,8 @@ def getURL(baseUrl, song_name, tags):
         url = baseUrl.format(song_name + ' ' + tags['date'][0])
     else:
         # todo: change below
-        url = baseUrl.format(song_name)
-        # url = baseUrl.format(song_name + ' Rafi')
+        # url = baseUrl.format(song_name)
+        url = baseUrl.format(song_name + ' Rafi')
     return url.replace(" ", '+')
 
 

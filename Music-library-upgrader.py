@@ -1,6 +1,6 @@
 import os
 
-from Base import main
+from src import main
 
 
 def start(test=0):
@@ -53,12 +53,15 @@ def start(test=0):
             exit(0)
 
 
-if os.path.isfile('Base/test_bit.py'):
+if os.path.isfile('src/test_bit.py'):
     test = 1
 else:
     test = 0
 
 start(test=test)
+
+# todo : add automatic support where it will download all songs that are auto-matched and leaves others
+# todo: app support for extra terms to be added to end of search url to enhance results
 
 # todo : add m4a support
 # todo: add mode for old songs which checks year < 2000 and other fixes

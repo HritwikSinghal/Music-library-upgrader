@@ -3,14 +3,14 @@ import re
 from os.path import isdir
 from os.path import isfile
 
-from Base import downloadSong
-from Base import tools
+from src import downloadSong
+from src import tools
 
 
 def inputSongDir(test=0):
     while True:
         if test:
-            songDir = r'C:\Users\Hritwik\Videos\test2'
+            songDir = r'/home/hritwik/Music/Old_Songs_OLD/Old_test'
         else:
             songDir = input("Enter song dir:  ")
 
@@ -39,35 +39,28 @@ def handleSongsInDir(song_dir, files, sub_dir_flag=-1, test=0):
     log_file = tools.createLogFile(song_dir)
     song_list = getSongList(files)
 
+    print("Creating downloads and done directory in current folder...")
+
+    download_dir = os.path.join(song_dir, 'Downloaded_songs')
+    done_dir = os.path.join(song_dir, 'Done')
+
     try:
-        print("Creating downloads and done directory in current folder...")
-
-        download_dir = os.path.join(song_dir, 'Downloaded_songs')
-        done_dir = os.path.join(song_dir, 'Done')
-
         os.mkdir(download_dir)
         os.mkdir(done_dir)
     except FileExistsError:
         print(
             "\n ==================== Since download directory already exists, I will save songs in it. ==================== ")
 
-    # noinspection PyUnboundLocalVariable
     print("Download dir =", download_dir, '\n')
 
     for song in song_list:
-        song_name = tools.removeBitrate(song)
-        song_name = tools.removeGibberish(song_name)
-        song_name = song_name.replace('.mp3', '')
-        song_name = song_name.strip()
-        print("Song Name: ", song_name)
-
         try:
-            downloadSong.start(song_name, song_dir, download_dir, log_file, test=test)
+            downloadSong.start(song, song_dir, download_dir, log_file, test=test)
         except:
-            print(" ==================== There Was Some Error Downloading {0} ==================== ".format(song_name))
+            print(" ==================== There Was Some Error Downloading {0} ==================== ".format(song))
             tools.writeAndPrintLog(log_file,
                                    "\n ==================== Error Downloading song={0} ==================== \n".format(
-                                       song_name), test=test)
+                                       song), test=test)
 
 
 def start(test=0):
