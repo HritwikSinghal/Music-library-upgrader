@@ -10,7 +10,7 @@ from src import tools
 def inputSongDir(test=0):
     while True:
         if test:
-            songDir = r'/home/hritwik/Music/Old_Songs_OLD/Old_test'
+            songDir = r'/home/hritwik/Music/Old_Songs_OLD/Rafi_test'
         else:
             songDir = input("Enter song dir:  ")
 

@@ -107,15 +107,17 @@ def autoMatch(song_info_list, song_name, tags, song_with_path, test=0):
 
 def getSong(song_info_list, song_name, tags, song_with_path, test=0):
     # auto-match song
+    # song = None
     song = autoMatch(song_info_list, song_name, tags, song_with_path, test)
     if song is not None:
         return song
 
-    # todo: remove this ;-)
-    if test:
-        return None
-
     #############################
+    # # todo: remove this ;-)
+    # if test:
+    #     return None
+
+
     # print("STOP")
     # x = input()
     #############################
@@ -239,7 +241,7 @@ def addTags(filename, json_data, log_file, test=0):
         audio['\xa9alb'] = html.unescape(str(json_data['actual_album'] +
                                              ' (' + json_data['year'] + ')'))
 
-    audio['aART'] = html.unescape(str(json_data['singers']))
+    # audio['aART'] = html.unescape(str(json_data['singers']))
     audio['\xa9wrt'] = html.unescape(str(json_data['music']))
     audio['desc'] = html.unescape(str(json_data['starring']))
     audio['\xa9gen'] = html.unescape(str(json_data['label']))
